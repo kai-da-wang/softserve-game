@@ -1,6 +1,6 @@
 import {CreamSimulation,CONFIG} from './simulation.js';
 import {GameView} from './render.js';
-import {MetaGame} from './meta.js?v=20261023-6';
+import {MetaGame} from './meta.js?v=20261023-7';
 const $=id=>document.getElementById(id),sim=new CreamSimulation(),view=new GameView($('game'));
 let meta=null;
 const strings={
