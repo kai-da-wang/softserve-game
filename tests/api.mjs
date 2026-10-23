@@ -26,6 +26,15 @@ try{
     const result=await ok('/api/runs/'+run.runId,{id,method:'POST',body:{replay,score:999999}});
     return {run,result};
   };
+  const mirrorHeaders={'Origin':'https://kai-da-wang.github.io'};
+  const mirrored=await mf.dispatchFetch('https://game.test/api/leaderboard',{headers:mirrorHeaders});
+  assert.equal(mirrored.headers.get('Access-Control-Allow-Origin'),mirrorHeaders.Origin);
+  assert.equal(mirrored.headers.get('Access-Control-Allow-Credentials'),null);
+  const untrusted=await mf.dispatchFetch('https://game.test/api/leaderboard',{headers:{Origin:'https://other.test'}});
+  assert.equal(untrusted.headers.get('Access-Control-Allow-Origin'),null);
+  const preflight=method=>mf.dispatchFetch('https://game.test/api/runs',{method:'OPTIONS',headers:{...mirrorHeaders,'Access-Control-Request-Method':method}});
+  assert.equal((await preflight('GET')).status,204);
+  assert.equal((await preflight('POST')).status,403);
   assert.deepEqual((await ok('/api/profile')).profile,null);
   assert.equal((await request('/api/runs',{method:'POST',body:{}})).status,401);
   assert.equal((await ok('/api/leaderboard')).entries.length,0);

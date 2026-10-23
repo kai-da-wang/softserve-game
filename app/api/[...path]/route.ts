@@ -3,3 +3,4 @@ export const dynamic='force-dynamic';
 export const GET=handleGameApi;
 export const POST=handleGameApi;
 export const PATCH=handleGameApi;
+export const OPTIONS=handleGameApi;

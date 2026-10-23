@@ -1,0 +1,13 @@
+import {cp,mkdir,readFile,writeFile} from 'node:fs/promises';
+import {fileURLToPath} from 'node:url';
+const root=fileURLToPath(new URL('../',import.meta.url));
+const output=new URL('../pages-dist/',import.meta.url);
+await mkdir(output,{recursive:true});
+await cp(new URL('../public/game/',import.meta.url),new URL('game/',output),{recursive:true});
+const gameFile=new URL('game/index.html',output);
+let html=await readFile(gameFile,'utf8');
+html=html.replace('<head>','<head><meta name="softserve-api-origin" content="https://soft-serve-stack-kai.imjusttrying341.chatgpt.site">');
+await writeFile(gameFile,html);
+await writeFile(new URL('index.html',output),'<!doctype html><html lang="zh-Hans"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#fff8ec"><title>冰淇淋模拟器</title><meta name="description" content="按住出奶油，自由卷出你的冰淇淋。六款皮肤，总榜与每日榜。"><style>html,body{width:100%;height:100%;margin:0;background:#fff8ec;overflow:hidden}iframe{display:block;width:min(100%,520px);height:100dvh;margin:auto;border:0}</style></head><body><iframe src="./game/index.html" title="冰淇淋模拟器" allow="web-share"></iframe></body></html>');
+await writeFile(new URL('.nojekyll',output),'');
+console.log('Static game ready: '+root+'pages-dist/');

@@ -1,5 +1,7 @@
 # 冰淇淋模拟器 · Soft Serve
 
+**直接游玩：[GitHub Pages](https://kai-da-wang.github.io/softserve-game/)** · [联网主站](https://soft-serve-stack-kai.imjusttrying341.chatgpt.site)
+
 一款竖屏冰淇淋小游戏。按住出奶油，自由拖动甜筒，松手完成；挑战叠高、解锁口味。
 
 基于 [softserve.nog.cc](https://softserve.nog.cc/) 的玩法与界面独立实现，保留参考出处，未使用原站应用代码或远程素材。物理效果为独立近似实现。
@@ -23,6 +25,8 @@
 | 极光双旋 | 500 |
 
 选择与进度会在本机保留。共享排行榜分总榜、每日榜：每人保留最高分，同分先达到者靠前；每日榜于北京时间 00:00 更新。云端根据操作记录重新模拟计分，不直接接受客户端声明的分数。
+
+GitHub Pages 入口无需登录，游戏资源全部随站点加载；皮肤与最高分保存在当前浏览器。联网可读取共享排行榜；云端上传成绩需通过主站登录。不同入口的本机进度独立保存。
 
 ## 本地运行
 
@@ -50,6 +54,7 @@ npm run check
 npm run test:api
 npx tsc --noEmit
 npm run build
+npm run build:pages
 ```
 
 测试覆盖操作、平衡与洒落、30/60 FPS、几何与材质、解锁边界、北京时间换日、成绩复算，以及临时 Worker/D1 中的排行榜与权限逻辑；不会写入线上测试成绩。
