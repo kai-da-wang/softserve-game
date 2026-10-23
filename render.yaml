@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: softserve-game-kai
+    runtime: static
+    repo: https://github.com/kai-da-wang/softserve-game
+    branch: main
+    buildCommand: node scripts/build-render.mjs
+    staticPublishPath: pages-dist
+    headers:
+      - path: /api/*
+        name: Cache-Control
+        value: no-store
+    routes:
+      - type: rewrite
+        source: /api/*
+        destination: https://awctnqjuknohysafihqn.supabase.co/functions/v1/softserve-api/api/*
