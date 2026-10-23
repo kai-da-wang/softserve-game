@@ -14,7 +14,8 @@
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
     "db:generate": "drizzle-kit generate",
     "test:api": "node tests/api.mjs",
-    "check": "node --check public/game/game.js && node --check public/game/meta.js && node --check public/game/progression.js && node --check public/game/simulation.js && node --check public/game/render.js && node tests/physics.mjs && node tests/geometry.mjs && node tests/progression.mjs && node tests/verification.mjs"
+    "check": "node --check public/game/game.js && node --check public/game/meta.js && node --check public/game/progression.js && node --check public/game/simulation.js && node --check public/game/render.js && node tests/physics.mjs && node tests/geometry.mjs && node tests/progression.mjs && node tests/verification.mjs",
+    "test:gateway": "node tests/gateway.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",

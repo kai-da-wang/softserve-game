@@ -1,0 +1,3 @@
+# Player bearer credentials are verified by the game API; no Supabase user login.
+[functions.softserve-api]
+verify_jwt = false

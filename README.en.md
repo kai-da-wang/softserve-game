@@ -25,7 +25,7 @@ The all-time board keeps each player's best score. The daily board keeps each pl
 
 ## Runtime
 
-Vinext on a Sites Worker serves the game in `public/game/` and the `/api/` endpoints. D1 binding `DB` stores players, rounds, and daily bests. `db/schema.ts` and `drizzle/` define the schema; deployment packaging includes the migration. Sites supplies authenticated identity through its trusted header. Anonymous users can play locally and read rankings; cloud writes require sign-in. The existing Site audience is preserved.
+Vinext on a Sites Worker serves the game in `public/game/` and the `/api/` endpoints. D1 binding `DB` stores players, rounds, and daily bests. `db/schema.ts` and `drizzle/` define the schema; deployment packaging includes the migration. Each browser creates a 256-bit guest credential; the API uses its SHA-256 digest as the player ID. Guest players can edit their nickname and upload server-verified rounds without signing in. Existing Sites account identity remains compatible. The GitHub entry calls a separate Supabase Edge Function; only the gateway server contacts Sites. It forwards neither cookies nor caller-supplied account headers. The public endpoint is configured in `config/leaderboard.json`; no Supabase admin keys are sent to the browser. The existing Site audience is preserved.
 
 The server replays recorded input with the shared fixed-step simulation and calculates the score itself. It validates the engine, input shape, bounds, completed outcome, elapsed time, and round ownership. Completed submissions are idempotent. This is basic score integrity, not a full competitive anti-cheat system.
 
@@ -38,6 +38,7 @@ The independent fixed-step model uses delayed flow, flattened strand contact, co
 ```sh
 npm run check
 npm run test:api
+npm run test:gateway
 npx tsc --noEmit
 npm run build
 ```

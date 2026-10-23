@@ -1,0 +1,74 @@
+import assert from 'node:assert/strict';
+import {readFile} from 'node:fs/promises';
+import {build} from 'esbuild';
+import {Miniflare} from 'miniflare';
+import {createGateway} from '../supabase/functions/_shared/gateway.mjs';
+import {createGameApi} from '../public/game/network.js';
+import {recordedRound} from './verification.mjs';
+
+const bundle = await build({stdin: {contents: 'import {handleGameApi} from "./lib/game/api.ts"; export default {fetch:handleGameApi};', resolveDir: process.cwd()}, bundle: true, write: false, format: 'esm', platform: 'browser', external: ['cloudflare:workers']});
+const mf = new Miniflare({modules: true, script: bundle.outputFiles[0].text, compatibilityDate: '2026-05-15', compatibilityFlags: ['nodejs_compat'], d1Databases: ['DB']});
+try {
+  const db = await mf.getD1Database('DB');
+  for (const statement of (await readFile(new URL('../drizzle/0000_adorable_freak.sql', import.meta.url), 'utf8')).split('--> statement-breakpoint')) if (statement.trim()) await db.prepare(statement).run();
+  const origin = 'https://kai-da-wang.github.io';
+  const base = 'https://gateway.test/functions/v1/softserve-api';
+  let forwarded;
+  const gateway = createGateway({fetcher: (url, options) => {
+    forwarded = {url: url.href, options};
+    return mf.dispatchFetch(url, options);
+  }});
+  const transport = (url, options) => gateway(new Request(url, {...options, headers: {...options.headers, Origin: origin}}));
+  const storage = () => {const values = new Map(); return {getItem: key => values.get(key), setItem: (key, value) => values.set(key, value)};};
+  const aliceStorage = storage();
+  const alice = createGameApi({base, origin, storage: aliceStorage, fetcher: transport});
+  const bob = createGameApi({base, origin, storage: storage(), fetcher: transport});
+  const health = await alice('/api/health');
+  assert.equal(health.guestIdentity, true);
+  assert.equal(forwarded.url, 'https://soft-serve-stack-kai.imjusttrying341.chatgpt.site/api/health');
+  assert.equal(forwarded.options.headers.has('Cookie'), false);
+  assert.equal(forwarded.options.headers.has('oai-authenticated-user-id'), false);
+  const profile = await alice('/api/profile');
+  assert.equal(profile.signedIn, true, 'A guest joins without ChatGPT sign-in');
+  await alice('/api/profile', {method: 'PATCH', body: {nickname: '奶油一号'}});
+  await bob('/api/profile', {method: 'PATCH', body: {nickname: '奶油二号'}});
+  const reloadedAlice = createGameApi({base, origin, storage: aliceStorage, fetcher: transport});
+  assert.equal((await reloadedAlice('/api/profile')).profile.nickname, '奶油一号', 'A reload retains the same player');
+  assert.equal((await bob('/api/profile')).profile.nickname, '奶油二号');
+  const run = await alice('/api/runs', {method: 'POST', body: {}});
+  const replay = recordedRound({seconds: 8}).replay;
+  await db.prepare('UPDATE runs SET started_at=? WHERE id=?').bind(Date.now() - replay.steps / 60 * 1000, run.runId).run();
+  const result = await alice('/api/runs/' + run.runId, {method: 'POST', body: {replay, score: 999999}});
+  assert.equal(result.score, 51, 'The server recomputes the score');
+  const duplicate = await alice('/api/runs/' + run.runId, {method: 'POST', body: {replay}});
+  assert.equal(duplicate.score, 51, 'Retries do not add duplicate records');
+  await assert.rejects(bob('/api/runs/' + run.runId, {method: 'POST', body: {replay}}), error => error.status === 404);
+  for (const period of ['all', 'daily']) {
+    const board = await alice('/api/leaderboard?period=' + period);
+    assert.equal(board.entries[0].nickname, '奶油一号');
+    assert.equal(board.entries[0].score, 51);
+    assert.equal(board.me.rank, 1);
+    assert(!JSON.stringify(board).includes(aliceStorage.getItem('softserve.identity.v1')), 'Credentials remain private');
+  }
+  const preflight = await gateway(new Request(base + '/api/runs', {method: 'OPTIONS', headers: {Origin: origin, 'Access-Control-Request-Method': 'POST', 'Access-Control-Request-Headers': 'authorization,content-type'}}));
+  assert.equal(preflight.status, 204);
+  assert.equal(preflight.headers.get('Access-Control-Allow-Origin'), origin);
+  assert.match(preflight.headers.get('Access-Control-Allow-Headers'), /Authorization/);
+  const evil = await gateway(new Request(base + '/api/profile', {headers: {Origin: 'https://other.test'}}));
+  assert.equal(evil.status, 403);
+  const spoofed = await gateway(new Request(base + '/api/profile', {headers: {Origin: origin, 'oai-authenticated-user-id': 'fake-account', Cookie: 'fake-session'}}));
+  assert.equal((await spoofed.json()).signedIn, false, 'The gateway never forwards caller-supplied account headers');
+  assert.equal(forwarded.options.headers.has('Cookie'), false);
+  const invalid = await gateway(new Request(base + '/api/runs', {method: 'POST', headers: {Origin: origin, Authorization: 'Bearer too-short'}, body: '{}'}));
+  assert.equal(invalid.status, 401);
+  const arbitrary = await gateway(new Request(base + '/api/secrets', {headers: {Origin: origin}}));
+  assert.equal(arbitrary.status, 404);
+  const expired = createGateway({fetcher: async () => {throw new Error('offline');}});
+  const offline = await expired(new Request(base + '/api/leaderboard', {headers: {Origin: origin}}));
+  assert.equal(offline.status, 503);
+  assert.equal((await offline.json()).error, 'unavailable');
+  const noStorage = createGameApi({base, origin, storage: {getItem() {throw new Error('blocked');}, setItem() {throw new Error('blocked');}}, fetcher: transport});
+  await noStorage('/api/profile');
+  assert.equal((await noStorage('/api/profile')).signedIn, true, 'Private browsing still works within the session');
+  console.log('Guest identity persistence/isolation, actual replay upload through gateway, both boards, CORS, credential stripping, malformed identity, idempotence, and offline responses passed.');
+} finally {await mf.dispose();}

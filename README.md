@@ -28,7 +28,9 @@
 
 选择与进度会在本机保留。共享排行榜分总榜、每日榜：每人保留最高分，同分先达到者靠前；每日榜于北京时间 00:00 更新。云端根据操作记录重新模拟计分，不直接接受客户端声明的分数。
 
-GitHub Pages 入口无需登录，游戏资源全部随站点加载；皮肤与最高分保存在当前浏览器。联网可读取共享排行榜；云端上传成绩需通过主站登录。不同入口的本机进度独立保存。
+GitHub Pages 入口无需注册或登录，完成一局会自动上传成绩并加入共享排行榜。每个浏览器使用独立的匿名玩家身份，可修改昵称；皮肤与最高分同时保存在本机。不同入口的本机进度独立保存。
+
+GitHub 版通过独立的 Supabase Edge Function 连接排行榜，玩家浏览器不再请求 ChatGPT 域名。函数只转发游戏 API，不转发 Cookie 或账户身份头；原有 D1 成绩与回放复算继续保留。公网接口地址在 `config/leaderboard.json`，客户端不需要任何后台密钥。
 
 ## 本地运行
 
@@ -39,7 +41,7 @@ npm ci
 npm run dev
 ```
 
-完整应用使用 Vinext、Cloudflare Worker 与 D1（绑定名 `DB`）；数据库结构位于 `db/schema.ts`，迁移位于 `drizzle/`。云端登录身份由 Sites 的可信入口注入，公开仓库不包含原站点身份、密钥或玩家数据。克隆后需配置自己的部署与数据库，并通过可信认证入口提供身份；不要在外网直接信任浏览器自填的身份请求头。
+完整应用使用 Vinext、Cloudflare Worker 与 D1（绑定名 `DB`）；数据库结构位于 `db/schema.ts`，迁移位于 `drizzle/`。玩家使用浏览器生成的 256 位随机凭据，服务器仅使用其 SHA-256 摘要标识匿名玩家；原有 Sites 登录身份仍兼容。公开仓库不包含凭据或玩家数据。克隆后需要配置自己的部署、数据库和网关目标；不要在外网直接信任浏览器自填的账户身份请求头。
 
 只想试玩本机玩法，也可以静态运行：
 
@@ -54,6 +56,7 @@ python3 -m http.server 8080 --directory public
 ```sh
 npm run check
 npm run test:api
+npm run test:gateway
 npx tsc --noEmit
 npm run build
 npm run build:pages

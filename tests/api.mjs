@@ -34,7 +34,9 @@ try{
   assert.equal(untrusted.headers.get('Access-Control-Allow-Origin'),null);
   const preflight=method=>mf.dispatchFetch('https://game.test/api/runs',{method:'OPTIONS',headers:{...mirrorHeaders,'Access-Control-Request-Method':method}});
   assert.equal((await preflight('GET')).status,204);
-  assert.equal((await preflight('POST')).status,403);
+  assert.equal((await preflight('POST')).status,204);
+  assert.equal((await preflight('PATCH')).status,204);
+  assert.equal((await preflight('DELETE')).status,403);
   assert.deepEqual((await ok('/api/profile')).profile,null);
   assert.equal((await request('/api/runs',{method:'POST',body:{}})).status,401);
   assert.equal((await ok('/api/leaderboard')).entries.length,0);
