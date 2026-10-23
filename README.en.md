@@ -1,6 +1,8 @@
 # 冰淇淋模拟器
 
-A portrait soft-serve game modeled on https://softserve.nog.cc/. Its credits identify the reference and this independent implementation. No original application bundle or remote game assets are included.
+Project author: kai.
+
+A portrait soft-serve game modeled on https://softserve.nog.cc/. The original game is referenced in these technical notes. No original application bundle or remote game assets are included.
 
 Hold anywhere in the lower 30% of the screen to extrude. Drag to move the cone directly; one screen width moves it 2.1 world units. Release to finish, then drag the finished cone to inspect it. The gameplay screen retains the minimal reference layout. Leaderboard and skin entrances appear only below the result controls.
 

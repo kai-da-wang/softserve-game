@@ -1,5 +1,7 @@
 # 冰淇淋模拟器 · Soft Serve
 
+本项目作者：kai。
+
 **直接游玩：[GitHub Pages](https://kai-da-wang.github.io/softserve-game/)** · [联网主站](https://soft-serve-stack-kai.imjusttrying341.chatgpt.site)
 
 一款竖屏冰淇淋小游戏。按住出奶油，自由拖动甜筒，松手完成；挑战叠高、解锁口味。
