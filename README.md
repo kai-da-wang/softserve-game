@@ -30,7 +30,7 @@
 
 GitHub Pages 入口无需注册或登录，完成一局会自动上传成绩并加入共享排行榜。每个浏览器使用独立的匿名玩家身份，可修改昵称；皮肤与最高分同时保存在本机。不同入口的本机进度独立保存。
 
-GitHub 版通过独立的 Supabase Edge Function 连接排行榜，玩家浏览器不再请求 ChatGPT 域名。函数只转发游戏 API，不转发 Cookie 或账户身份头；原有 D1 成绩与回放复算继续保留。公网接口地址在 `config/leaderboard.json`，客户端不需要任何后台密钥。
+GitHub 版排行榜现使用独立的 Supabase PostgreSQL 数据库与 Edge Function，读写成绩不再依赖 ChatGPT Sites 或原有 D1。玩家无需登录，云端重新模拟每局操作并校验成绩；数据表采用 RLS、禁止匿名直连写入，仅允许服务端访问。公网接口在 `config/leaderboard.json`；前端不包含后台密钥。2026-10-23 从旧排行榜迁入可见的最高成绩快照（238 分），原设备身份不自动绑定该历史记录。
 
 ## 本地运行
 
@@ -41,7 +41,7 @@ npm ci
 npm run dev
 ```
 
-完整应用使用 Vinext、Cloudflare Worker 与 D1（绑定名 `DB`）；数据库结构位于 `db/schema.ts`，迁移位于 `drizzle/`。玩家使用浏览器生成的 256 位随机凭据，服务器仅使用其 SHA-256 摘要标识匿名玩家；原有 Sites 登录身份仍兼容。公开仓库不包含凭据或玩家数据。克隆后需要配置自己的部署、数据库和网关目标；不要在外网直接信任浏览器自填的账户身份请求头。
+旧 ChatGPT Sites 版仍使用 Vinext、Cloudflare Worker 与 D1（绑定名 `DB`）；GitHub Pages 游戏排行榜使用独立 Supabase。旧数据库结构位于 `db/schema.ts`，迁移位于 `drizzle/`。玩家使用浏览器生成的 256 位随机凭据，服务器仅使用其 SHA-256 摘要标识匿名玩家；原有 Sites 登录身份仍兼容。公开仓库不包含凭据或玩家数据。克隆后需要配置自己的部署、数据库和网关目标；不要在外网直接信任浏览器自填的账户身份请求头。
 
 只想试玩本机玩法，也可以静态运行：
 
